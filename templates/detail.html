@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Webpage</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
+</head>
+<body>
+    <ul id="navigation">
+        {% for item in navigation %}
+        <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+        {% endfor %}
+    </ul>
+    <div class="ui container">
+        <h1>My Webpage</h1>
+        <div class="ui grid">
+            <div class="eight wide column">{{ money_in|safe }}</div>
+            <div class="eight wide column">{{ money_out|safe }}</div>
+          </div>
+    </div>
+    
+    {# a comment #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+</body>
+</html>

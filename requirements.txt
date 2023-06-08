@@ -1,0 +1,6 @@
+pynubank
+ipdb
+pandas
+cherrypy
+Jinja2
+python-dotenv
