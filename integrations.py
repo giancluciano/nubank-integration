@@ -5,6 +5,8 @@ from datetime import datetime, date
 import re
 from pandas import DataFrame, date_range
 from typing import List
+from models import Transfer
+from pony.orm import db_session, select, desc
 
 date_format = '%Y-%m-%d'
 
@@ -33,7 +35,13 @@ class NubankIntegration:
             has_next_page = account_statements['pageInfo']['hasNextPage']
             cursor = account_statements['edges'][-1]['cursor']
             for transaction in account_statements['edges']:
-                transfers.append(transaction['node'])
+                _, created = Transfer.get_or_create(transaction['node'])
+                if not created:
+                    has_next_page = False
+                    break
+        with db_session:
+            transfers_query = select(t for t in Transfer).order_by(lambda t: desc(t.date))
+            transfers.extend([transfer for transfer in transfers_query])
         self._transfers = transfers
         return transfers
     
@@ -43,10 +51,9 @@ class NubankIntegration:
         year_month = year_month.replace(day=1)
         month_transfers = []
         for transfer in self._transfers:
-            transfers_date = datetime.strptime(transfer['postDate'], date_format).date()
-            if year_month and transfers_date.year > year_month.year or (transfers_date.year == year_month.year and transfers_date.month > year_month.month):
+            if year_month and transfer.date.year > year_month.year or (transfer.date.year == year_month.year and transfer.date.month > year_month.month):
                 continue
-            if year_month and transfers_date < year_month:
+            if year_month and transfer.date < year_month:
                 break
             month_transfers.append(transfer)
         return month_transfers
@@ -62,7 +69,10 @@ class NubankIntegration:
 
     def get_investiment_yield(self, _datetime:datetime):
         if not self._investiment.get(_datetime):
-            self._investiment[_datetime] = self.nu.get_account_investments_yield(_datetime)
+            try:
+                self._investiment[_datetime] = self.nu.get_account_investments_yield(_datetime)
+            except Exception:
+                self._investiment[_datetime] = 0.0
         return  self._investiment[_datetime]
     
     def get_transfers_date_range(self):

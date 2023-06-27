@@ -15,11 +15,11 @@ class AccountSummaries:
 
     def _resume_transfer(self, transfer):
         resumed = {
-            'postDate': transfer['postDate'],
-            'amount': transfer['amount']
+            'postDate': transfer.date,
+            'amount': transfer.amount
         }
 
-        resumed['detail'] = re.sub('\\n.*', '', transfer['detail'])
+        resumed['detail'] = re.sub('\\n.*', '', transfer.detail)
 
         return resumed
 
@@ -31,9 +31,9 @@ class AccountSummaries:
         }
         transfers = self.nu_integration.get_month_account_statements(year_month)
         for transfer in transfers:
-            if transfer.get('tags') and 'money-in' in transfer.get('tags'):
+            if 'money-in' in transfer.tag_list:
                 summary['money-in'].append(self._resume_transfer(transfer))
-            elif transfer.get('tags') and 'money-out' in transfer.get('tags'):
+            elif 'money-out' in transfer.tag_list:
                 summary['money-out'].append(self._resume_transfer(transfer))
             else:
                 summary['internal'].append(self._resume_transfer(transfer))
@@ -54,10 +54,10 @@ class AccountSummaries:
         }
         
         for transfer in self.nu_integration.get_month_account_statements(year_month):
-            if transfer.get('tags') and 'money-in' in transfer.get('tags'):
-                summary['Entrada'] += transfer['amount']
-            elif transfer.get('tags') and 'money-out' in transfer.get('tags'):
-                summary['saida'] += transfer['amount']
+            if 'money-in' in transfer.tag_list:
+                summary['Entrada'] += transfer.amount
+            elif 'money-out' in transfer.tag_list:
+                summary['saida'] += transfer.amount
         summary['lucro mensal'] = summary['Entrada'] + summary['rendimento nuconta'] - summary['saida']
 
         bill = self.nu_integration.get_month_bill(year_month)
