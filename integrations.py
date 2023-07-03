@@ -2,8 +2,7 @@ from pynubank import Nubank
 import os
 from dotenv import load_dotenv
 from datetime import datetime, date
-import re
-from pandas import DataFrame, date_range
+from pandas import date_range, read_excel
 from typing import List
 from models import Transfer
 from pony.orm import db_session, select, desc
@@ -82,3 +81,16 @@ class NubankIntegration:
         last_date = datetime.strptime(self._bills[0]['summary']['due_date'], date_format).date()
         first_date = datetime.strptime(self._bills[-1]['summary']['due_date'], date_format).date().replace(day=1)
         return [ x.date() for x in date_range(first_date, last_date, freq='MS', inclusive='both')]
+
+
+class B3fileIntegration:
+
+    def __init__(self) -> None:
+        self.file = read_excel('b3/posicao-2023-06-30-16-16-16.xlsx', sheet_name=None)
+        self.sheets = self.file.keys()
+
+    def get_totals(self):
+        result = {}
+        for index, value in self.file.items():
+            result[index] = value.iloc[-1,-1]  # last line of last column
+        return result

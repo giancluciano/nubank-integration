@@ -1,9 +1,9 @@
 from pynubank import Nubank
 from datetime import datetime, date
 import re
-from pandas import DataFrame, date_range
+from pandas import DataFrame, concat
 from typing import List
-from integrations import NubankIntegration
+from integrations import NubankIntegration, B3fileIntegration
 
 date_format = '%Y-%m-%d'
 
@@ -71,3 +71,25 @@ class AccountSummaries:
         for year_month in self.nu_integration.get_transfers_date_range():
             summary.insert(0, self.in_n_out_month_summary(year_month))
         return summary
+
+
+class TotalSummary:
+    def __init__(self) -> None:
+        self.nu_integration = NubankIntegration()
+        self.b3_integration = B3fileIntegration()
+    
+    def get_totals(self) -> DataFrame:
+        account_balance = self.nu_integration.get_account_balance()
+        totals = self.b3_integration.get_totals()
+        totals["Nubank"] =  account_balance
+
+        totals = DataFrame([totals])
+        percentages = totals.apply(lambda x: x/x.sum(), axis=1)
+        totals = concat([totals, percentages])
+        totals.iloc[1] = totals.iloc[1].apply('{:.2%}'.format)
+        return totals
+
+
+if __name__ == '__main__':
+    total = TotalSummary()
+    total.get_totals()

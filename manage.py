@@ -1,5 +1,5 @@
 import cherrypy
-from summaries import AccountSummaries
+from summaries import AccountSummaries, TotalSummary
 from datetime import datetime
 from pandas import DataFrame, options
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -12,15 +12,21 @@ env = Environment(
 class Main(object):
     def __init__(self) -> None:
         self.summaries = AccountSummaries()
+        self.total_summary = TotalSummary()
 
     @cherrypy.expose
     def index(self):
+
+        totals_table = self.total_summary.get_totals()
         
         totals = self.summaries.in_n_out_summary()
         index = [_date.strftime('%Y %b') for _date in self.summaries.nu_integration.get_transfers_date_range()][::-1]
         df = DataFrame.from_records(totals, index)
         template = env.get_template("index.html")
-        return template.render(main_table=df.to_html(classes='ui table selectable compact right aligned collapsing green striped', escape=False))
+        return template.render(
+            main_table=df.to_html(classes='ui table selectable compact right aligned collapsing green striped single line', escape=False),
+            total_table=totals_table.to_html(classes='ui table selectable compact right aligned collapsing green striped', index=False)
+            )
 
 
     @cherrypy.expose
@@ -35,4 +41,5 @@ class Main(object):
 
 if __name__ == '__main__':
     options.display.float_format = '${:,.2f}'.format
+    #options.display.float_format = '$*****'.format
     cherrypy.quickstart(Main())

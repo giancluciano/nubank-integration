@@ -5,3 +5,4 @@ cherrypy
 Jinja2
 python-dotenv
 pony
+openpyxl

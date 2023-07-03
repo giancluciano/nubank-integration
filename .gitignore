@@ -162,3 +162,4 @@ cython_debug/
 cert.p12
 *.sqlite
 .vscode
+b3/*
